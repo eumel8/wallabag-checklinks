@@ -2,7 +2,7 @@
 
 This Github Action will check all weblinks of your [Wallabag](https://www.wallabag.org)  instance. Dead link will mark as dead (tag).
 
-Run this action once or periodically. See [Example](./.github/workflows/wallabag-checklinks.yml) for usage.
+Run this action once or periodically. See [Example](./.github/workflows/wallabag-checklinks.yml) for usage or below.
 
 Requires following secrets in your Github repository:
 
@@ -18,8 +18,36 @@ Refer to the [Wallabag Documentation](https://doc.wallabag.org/developer/api/oau
 
 After run you can see job output for results or check tagged articles in your Wallabag instance with `dead`
 
+## example
 
-## Credits
+```yaml
+name: Check Wallabag Dead Links
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Wallabag Link Checker
+        uses: eumel8/wallabag-checklinks@0.0.6
+        env:
+          WALLABAG_URL: ${{ secrets.WALLABAG_URL }}
+          WALLABAG_CLIENT_ID: ${{ secrets.WALLABAG_CLIENT_ID }}
+          WALLABAG_CLIENT_SECRET: ${{ secrets.WALLABAG_CLIENT_SECRET }}
+          WALLABAG_USERNAME: ${{ secrets.WALLABAG_USERNAME }}
+          WALLABAG_PASSWORD: ${{ secrets.WALLABAG_PASSWORD }}
+```
+
+## tipps & tricks
+
+* wallabag-checklinks is limited to 10.000 entries
+* your weblinks will exposed if the Github repo is public, be careful. Use private repo or use wallabag-checklinks locally, look at the [release page](https://github.com/eumel8/wallabag-checklinks/releases) for binaries.
+
+## credits
 
 Frank Kloeker f.kloeker@telekom.de
 
