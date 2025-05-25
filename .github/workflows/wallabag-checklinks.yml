@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Run Wallabag Link Checker
-        uses: eumel8/wallabag-checklinks@v1
+        uses: eumel8/wallabag-checklinks@0.0.1
         env:
           WALLABAG_URL: ${{ secrets.WALLABAG_URL }}
           WALLABAG_CLIENT_ID: ${{ secrets.WALLABAG_CLIENT_ID }}
