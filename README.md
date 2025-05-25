@@ -2,7 +2,7 @@
 
 This Github Action will check all weblinks of your [Wallabag](https://www.wallabag.org)  instance. Dead link will mark as dead (tag).
 
-Run this action once or periodically. See [Example](./github/workflows/wallabag-checklinks.yml) for usage.
+Run this action once or periodically. See [Example](./.github/workflows/wallabag-checklinks.yml) for usage.
 
 Requires following secrets in your Github repository:
 
