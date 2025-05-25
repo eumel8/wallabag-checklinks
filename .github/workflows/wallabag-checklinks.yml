@@ -1,0 +1,19 @@
+name: Check Wallabag Dead Links
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Wallabag Link Checker
+        uses: eumel8/wallabag-checklinks@v1
+        env:
+          WALLABAG_URL: ${{ secrets.WALLABAG_URL }}
+          WALLABAG_CLIENT_ID: ${{ secrets.WALLABAG_CLIENT_ID }}
+          WALLABAG_CLIENT_SECRET: ${{ secrets.WALLABAG_CLIENT_SECRET }}
+          WALLABAG_USERNAME: ${{ secrets.WALLABAG_USERNAME }}
+          WALLABAG_PASSWORD: ${{ secrets.WALLABAG_PASSWORD }}

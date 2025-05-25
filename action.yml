@@ -1,0 +1,21 @@
+name: Wallabag Link Checker
+description: Checks Wallabag bookmarks for dead links and tags them with "dead"
+author: Frank Kloeker
+inputs:
+  WALLABAG_URL:
+    description: Wallabag instance URL
+    required: true
+  WALLABAG_CLIENT_ID:
+    required: true
+  WALLABAG_CLIENT_SECRET:
+    required: true
+  WALLABAG_USERNAME:
+    required: true
+  WALLABAG_PASSWORD:
+    required: true
+runs:
+  using: docker
+  image: docker://ghcr.io/eumel8/wallabag-checklinks:latest
+branding:
+  icon: link
+  color: blue
