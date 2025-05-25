@@ -6,4 +6,4 @@ COPY . .
 
 RUN go mod tidy && go build -o checklinks
 
-ENTRYPOINT ["./checklinks"]
+ENTRYPOINT ["/app/checklinks"]
