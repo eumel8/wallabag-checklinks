@@ -16,7 +16,7 @@ var (
     clientID       = getEnvOrFail("WALLABAG_CLIENT_ID")
     clientSecret   = getEnvOrFail("WALLABAG_CLIENT_SECRET")
     password       = getEnvOrFail("WALLABAG_PASSWORD")
-    username       = getEnvOrFail("WALLABAG_USER")
+    username       = getEnvOrFail("WALLABAG_USERNAME")
 )
 
 type AuthResponse struct {
