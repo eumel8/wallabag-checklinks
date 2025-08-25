@@ -108,7 +108,13 @@ func getEntries(client *resty.Client, token string) ([]Entry, error) {
 }
 
 func checkURL(url string) int {
-    client := &http.Client{Timeout: 10 * time.Second}
+    client := &http.Client{
+        Timeout: 15 * time.Second,
+        Transport: &http.Transport{
+            TLSHandshakeTimeout: 10 * time.Second,
+            IdleConnTimeout:     90 * time.Second,
+        },
+    }
 
     req, _ := http.NewRequest("HEAD", url, nil)
     resp, err := client.Do(req)
@@ -209,7 +215,10 @@ func containsTag(tags []string, target string) bool {
 }
 
 func main() {
-    restyClient := resty.New()
+    restyClient := resty.New().
+        SetTimeout(30 * time.Second).
+        SetRetryCount(3).
+        SetRetryWaitTime(5 * time.Second)
 
     token, err := getAccessToken(restyClient)
     if err != nil {
