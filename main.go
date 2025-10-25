@@ -6,6 +6,7 @@ import (
     "log"
     "net/http"
     "os"
+    "strconv"
     "time"
 
     "github.com/go-resty/resty/v2"
@@ -24,6 +25,9 @@ type AuthResponse struct {
 }
 
 type EntryList struct {
+    Page  int `json:"page"`
+    Pages int `json:"pages"`
+    Total int `json:"total"`
     Embedded struct {
         Items []struct {
             ID   int      `json:"id"`
@@ -49,6 +53,27 @@ func getEnvOrFail(key string) string {
         log.Fatalf("❌ Environment variable %s is not set", key)
     }
     return value
+}
+
+func getEnvOrDefault(key string, defaultValue string) string {
+    value := os.Getenv(key)
+    if value == "" {
+        return defaultValue
+    }
+    return value
+}
+
+func getEnvIntOrDefault(key string, defaultValue int) int {
+    value := os.Getenv(key)
+    if value == "" {
+        return defaultValue
+    }
+    intValue, err := strconv.Atoi(value)
+    if err != nil {
+        log.Printf("⚠️  Invalid value for %s, using default: %d", key, defaultValue)
+        return defaultValue
+    }
+    return intValue
 }
 
 func getAccessToken(client *resty.Client) (string, error) {
@@ -77,41 +102,58 @@ func getAccessToken(client *resty.Client) (string, error) {
 }
 
 func getEntries(client *resty.Client, token string) ([]Entry, error) {
-    var entries EntryList
-
-    _, err := client.R().
-        SetHeader("Authorization", "Bearer "+token).
-        SetQueryParams(map[string]string{
-            "perPage": "10000", // Adjust for more
-        }).
-        SetResult(&entries).
-        Get(wallabagURL + "/api/entries.json")
-
-    if err != nil {
-        return nil, err
-    }
-
     var result []Entry
-    for _, item := range entries.Embedded.Items {
-        tags := []string{}
-        for _, tag := range item.Tags {
-            tags = append(tags, tag.Label)
+    page := 1
+    perPage := 100 // Reasonable page size
+
+    for {
+        var entries EntryList
+
+        _, err := client.R().
+            SetHeader("Authorization", "Bearer "+token).
+            SetQueryParams(map[string]string{
+                "page":    fmt.Sprintf("%d", page),
+                "perPage": fmt.Sprintf("%d", perPage),
+            }).
+            SetResult(&entries).
+            Get(wallabagURL + "/api/entries.json")
+
+        if err != nil {
+            return nil, err
         }
-        result = append(result, Entry{
-            ID:   item.ID,
-            URL:  item.URL,
-            Tags: tags,
-        })
+
+        // Process entries from this page
+        for _, item := range entries.Embedded.Items {
+            tags := []string{}
+            for _, tag := range item.Tags {
+                tags = append(tags, tag.Label)
+            }
+            result = append(result, Entry{
+                ID:   item.ID,
+                URL:  item.URL,
+                Tags: tags,
+            })
+        }
+
+        // Log progress
+        fmt.Printf("📥 Fetched page %d/%d (%d entries so far)\n", page, entries.Pages, len(result))
+
+        // Check if we've fetched all pages
+        if page >= entries.Pages {
+            break
+        }
+
+        page++
     }
 
     return result, nil
 }
 
-func checkURL(url string) int {
+func checkURL(url string, timeout int, tlsTimeout int) int {
     client := &http.Client{
-        Timeout: 15 * time.Second,
+        Timeout: time.Duration(timeout) * time.Second,
         Transport: &http.Transport{
-            TLSHandshakeTimeout: 10 * time.Second,
+            TLSHandshakeTimeout: time.Duration(tlsTimeout) * time.Second,
             IdleConnTimeout:     90 * time.Second,
         },
     }
@@ -215,8 +257,13 @@ func containsTag(tags []string, target string) bool {
 }
 
 func main() {
+    // Get configurable timeouts with defaults
+    apiTimeout := getEnvIntOrDefault("WALLABAG_API_TIMEOUT", 30)
+    httpTimeout := getEnvIntOrDefault("HTTP_CHECK_TIMEOUT", 15)
+    tlsTimeout := getEnvIntOrDefault("TLS_HANDSHAKE_TIMEOUT", 10)
+
     restyClient := resty.New().
-        SetTimeout(30 * time.Second).
+        SetTimeout(time.Duration(apiTimeout) * time.Second).
         SetRetryCount(3).
         SetRetryWaitTime(5 * time.Second)
 
@@ -233,7 +280,7 @@ func main() {
     fmt.Printf("🔎 Checking %d URLs...\n\n", len(entries))
 
     for _, entry := range entries {
-        status := checkURL(entry.URL)
+        status := checkURL(entry.URL, httpTimeout, tlsTimeout)
         hasDeadTag := containsTag(entry.Tags, "dead")
 
         if status == 0 {
