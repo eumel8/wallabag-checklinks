@@ -13,9 +13,15 @@ inputs:
     required: true
   WALLABAG_PASSWORD:
     required: true
+  WALLABAG_API_TIMEOUT:
+    required: false
+  HTTP_CHECK_TIMEOUT:
+    required: false
+  TLS_HANDSHAKE_TIMEOUT:
+    required: false
 runs:
   using: docker
-  image: docker://ghcr.io/eumel8/wallabag-checklinks/wallabag-checklinks:dev
+  image: docker://ghcr.io/eumel8/wallabag-checklinks/wallabag-checklinks:0.0.8
 branding:
   icon: link
   color: blue
